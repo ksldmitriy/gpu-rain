@@ -2,6 +2,7 @@
 
 #include <KHR/khrplatform.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/Xrandr.h>
 #include <glad/gl.h>
 #include <glad/glx.h>
 #include <stdexcept>
@@ -74,6 +75,25 @@ void XRootWindow::CreateGLContext() {
 
 void XRootWindow::SwapBuffers() {
   glXSwapBuffers(m_display, m_window);
+}
+
+std::vector<MonitorDimensions> XRootWindow::GetMonitorDimensions() {
+  int monitors_count;
+  XRRMonitorInfo *monitors_info =
+      XRRGetMonitors(m_display, m_window, 1, &monitors_count);
+
+  std::vector<MonitorDimensions> monitor_dimensions(monitors_count);
+
+  for (int i = 0; i < monitors_count; i++) {
+    MonitorDimensions dimensions;
+    dimensions.position = glm::ivec2(monitors_info[i].x, monitors_info[i].y);
+    dimensions.size =
+        glm::uvec2(monitors_info[i].width, monitors_info[i].height);
+  }
+
+  XRRFreeMonitors(monitors_info);
+
+  return monitor_dimensions;
 }
 
 void XRootWindow::OpenXDisplay() {

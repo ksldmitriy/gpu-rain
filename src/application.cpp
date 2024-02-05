@@ -19,6 +19,8 @@ void Application::Init() {
   m_window.Open();
 
   m_window.CreateGLContext();
+
+  m_window.GetMonitorDimensions();
 }
 
 void Application::MainLoop() {

@@ -1,4 +1,6 @@
 #pragma once
+#include <glm/glm.hpp>
+#include <vector>
 
 struct _XDisplay;
 typedef _XDisplay Display;
@@ -7,6 +9,11 @@ typedef unsigned long XID;
 typedef XID Window;
 
 struct _XScreen;
+
+struct MonitorDimensions {
+  glm::ivec2 position;
+  glm::uvec2 size;
+};
 
 class XRootWindow {
 public:
@@ -20,7 +27,9 @@ public:
 
   void CreateGLContext();
   void SwapBuffers();
-  
+
+  std::vector<MonitorDimensions> GetMonitorDimensions();
+
 private:
   void OpenXDisplay();
   void CloseXDisplay();
