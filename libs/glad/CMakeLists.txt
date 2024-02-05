@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13.4)
 
-project(lofi-rain)
+project(glad)
 
 # set
 set(CMAKE_CXX_STANDARD 20)
@@ -17,12 +17,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 find_package(X11 REQUIRED)
 find_package(OpenGL REQUIRED COMPONENTS GLX OpenGL)
 
-# libs
-add_subdirectory(libs/glad)
-
 # program
-file(GLOB_RECURSE MY_PROJECT_SRC src/*.cpp)
+file(GLOB_RECURSE MY_PROJECT_SRC src/*.c)
 
-add_executable(lofi-rain ${MY_PROJECT_SRC})
+add_library(glad ${MY_PROJECT_SRC})
 
-target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} libXi.so glad)
+target_link_libraries(glad PUBLIC ${X11_LIBRARIES} libXi.so OpenGL::OpenGL OpenGL::GLX)
+
+target_include_directories(glad PUBLIC include)
+

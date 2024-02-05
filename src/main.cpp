@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "X11/Xlib.h"
+
 int main() {
   Application app;
 

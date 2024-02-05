@@ -18,12 +18,17 @@ public:
   void Open();
   void Close();
 
+  void CreateGLContext();
+  void SwapBuffers();
+  
 private:
   void OpenXDisplay();
   void CloseXDisplay();
 
 private:
   Display *m_display = nullptr;
-  _XScreen *m_screen;
-  Window m_window;
+  _XScreen *m_screen = nullptr;
+  Window m_window = 0;
+
+  static constexpr int screen_number = 0;
 };
