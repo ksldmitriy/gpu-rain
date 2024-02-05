@@ -6,3 +6,7 @@
 !/.clang-format
 !/.gitignore
 !/CMakeLists.txt
+!/libs/
+/libs/*
+!/libs/glad/
+!/libs/glad/*
