@@ -10,3 +10,14 @@ int Application::Run() {
 
   return 0;
 }
+
+void Application::Init() {
+  m_window.Open();
+}
+
+void Application::MainLoop() {
+}
+
+void Application::Cleanup() {
+  m_window.Close();
+}
