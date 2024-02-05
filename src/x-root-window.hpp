@@ -25,10 +25,10 @@ public:
   void Open();
   void Close();
 
-  void CreateGLContext();
-  void SwapBuffers();
+  void CreateGLContext() const;
+  void SwapBuffers() const;
 
-  std::vector<MonitorDimensions> GetMonitorDimensions();
+  std::vector<MonitorDimensions> GetMonitorDimensions() const;
 
 private:
   void OpenXDisplay();
