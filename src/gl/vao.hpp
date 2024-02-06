@@ -5,7 +5,7 @@ namespace gl {
 
 typedef unsigned int GLuint, GLenum;
 
-class VertexArray {
+class VAO {
 public:
   struct VertexField {
     int count;
@@ -14,12 +14,12 @@ public:
   };
 
 public:
-  VertexArray();
-  VertexArray(VertexArray &) = delete;
-  VertexArray &operator=(VertexArray &) = delete;
-  VertexArray(VertexArray &&vao);
-  VertexArray &operator=(VertexArray &&vao);
-  ~VertexArray();
+  VAO();
+  VAO(VAO &) = delete;
+  VAO &operator=(VAO &) = delete;
+  VAO(VAO &&vao);
+  VAO &operator=(VAO &&vao);
+  ~VAO();
 
   void Create(const std::vector<VertexField> &vertex_fields, size_t stride);
   void Destroy();

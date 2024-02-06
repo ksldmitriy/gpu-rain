@@ -5,14 +5,14 @@
 
 namespace gl {
 
-VertexArray::VertexArray() {
+VAO::VAO() {
 }
 
-VertexArray::VertexArray(VertexArray &&vao) {
+VAO::VAO(VAO &&vao) {
   *this = std::move(vao);
 }
 
-VertexArray &VertexArray::operator=(VertexArray &&vao) {
+VAO &VAO::operator=(VAO &&vao) {
   if (m_handle) {
     throw std::runtime_error("trying to move vao to existing one");
   }
@@ -27,7 +27,7 @@ VertexArray &VertexArray::operator=(VertexArray &&vao) {
   return *this;
 }
 
-VertexArray::~VertexArray() {
+VAO::~VAO() {
   if (!m_handle) {
     return;
   }
@@ -35,7 +35,7 @@ VertexArray::~VertexArray() {
   Destroy();
 }
 
-void VertexArray::Create(const std::vector<VertexField> &vertex_fields,
+void VAO::Create(const std::vector<VertexField> &vertex_fields,
                          size_t stride) {
   if (m_handle) {
     throw std::runtime_error("trying to create VAO over existing one");
@@ -48,7 +48,7 @@ void VertexArray::Create(const std::vector<VertexField> &vertex_fields,
   m_stride = stride;
 }
 
-void VertexArray::Destroy() {
+void VAO::Destroy() {
   if (!m_handle) {
     throw std::runtime_error("trying to destroy empty VAO");
   }
@@ -60,11 +60,11 @@ void VertexArray::Destroy() {
   m_vertex_fields.clear();
 }
 
-void VertexArray::Bind() const {
+void VAO::Bind() const {
   glBindVertexArray(m_handle);
 }
 
-void VertexArray::PointAttribs() {
+void VAO::PointAttribs() {
   glBindVertexArray(m_handle);
 
   for (int i = 0; i < m_vertex_fields.size(); i++) {
