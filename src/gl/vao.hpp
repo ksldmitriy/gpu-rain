@@ -17,6 +17,8 @@ public:
   VertexArray();
   VertexArray(VertexArray &) = delete;
   VertexArray &operator=(VertexArray &) = delete;
+  VertexArray(VertexArray &&vao);
+  VertexArray &operator=(VertexArray &&vao);
   ~VertexArray();
 
   void Create(const std::vector<VertexField> &vertex_fields, size_t stride);

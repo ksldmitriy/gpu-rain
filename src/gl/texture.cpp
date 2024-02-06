@@ -8,6 +8,23 @@ namespace gl {
 Texture::Texture() {
 }
 
+Texture::Texture(Texture &&texture) {
+  *this = std::move(texture);
+}
+
+Texture &Texture::operator=(Texture &&texture) {
+  if (m_handle) {
+    throw std::runtime_error("trying to move texture to existing one");
+  }
+
+  m_handle = texture.m_handle;
+  m_size = texture.m_size;
+
+  texture.m_handle = 0;
+
+  return *this;
+}
+
 Texture::~Texture() {
   if (!m_handle) {
     return;

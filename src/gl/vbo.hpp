@@ -11,13 +11,15 @@ public:
   VBO();
   VBO(VBO &) = delete;
   VBO &operator=(VBO &) = delete;
+  VBO(VBO &&vbo);
+  VBO &operator=(VBO &&vbo);
   ~VBO();
 
   void Create(size_t size, GLenum mode, const void *data = nullptr);
   void Free();
 
   void Bind() const;
-  
+
   size_t GetSize() const;
 
 private:

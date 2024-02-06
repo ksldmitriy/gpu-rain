@@ -8,6 +8,25 @@ namespace gl {
 VertexArray::VertexArray() {
 }
 
+VertexArray::VertexArray(VertexArray &&vao) {
+  *this = std::move(vao);
+}
+
+VertexArray &VertexArray::operator=(VertexArray &&vao) {
+  if (m_handle) {
+    throw std::runtime_error("trying to move vao to existing one");
+  }
+
+  m_handle = vao.m_handle;
+  m_stride = vao.m_stride;
+  m_vertex_fields = std::move(vao.m_vertex_fields);
+
+  vao.m_handle = 0;
+  vao.m_stride = 0;
+
+  return *this;
+}
+
 VertexArray::~VertexArray() {
   if (!m_handle) {
     return;

@@ -8,6 +8,24 @@ namespace gl {
 VBO::VBO() {
 }
 
+VBO::VBO(VBO &&vbo) {
+  *this = std::move(vbo);
+}
+
+VBO &VBO::operator=(VBO &&vbo) {
+  if (m_handle) {
+    throw std::runtime_error("trying to move vbo to existing one");
+  }
+
+  m_handle = vbo.m_handle;
+  m_size = vbo.m_size;
+
+  vbo.m_handle = 0;
+  vbo.m_size = 0;
+
+  return *this;
+}
+
 VBO::~VBO() {
   if (!m_handle) {
     return;

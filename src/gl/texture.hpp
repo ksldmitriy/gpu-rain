@@ -1,6 +1,4 @@
 #pragma once
-#include "image-format.hpp"
-
 #include <glm/glm.hpp>
 
 namespace gl {
@@ -21,6 +19,8 @@ public:
   Texture();
   Texture(Texture &) = delete;
   Texture &operator=(Texture &) = delete;
+  Texture(Texture &&texture);
+  Texture &operator=(Texture &&texture);
   ~Texture();
 
   void Create(glm::uvec2 size, TextureCreateInfo &create_info,
