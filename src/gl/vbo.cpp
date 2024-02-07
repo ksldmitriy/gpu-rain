@@ -43,12 +43,12 @@ void VBO::Create(size_t size, GLenum mode, const void *data) {
     throw std::runtime_error("trying to create VBO with size 0");
   }
 
-  m_size = 0;
+  m_size = size;
 
   glGenBuffers(1, &m_handle);
   glBindBuffer(GL_ARRAY_BUFFER, m_handle);
 
-  glBufferData(m_handle, size, data, mode);
+  glBufferData(GL_ARRAY_BUFFER, size, data, mode);
 }
 
 void VBO::Free() {
