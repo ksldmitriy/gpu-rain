@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo === RESOURCES ===
+
+./create-resources.sh
+
 echo === CMAKE ===
 
 cmake -S . -B ./out  
