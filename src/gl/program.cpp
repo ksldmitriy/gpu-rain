@@ -22,6 +22,8 @@ Program &Program::operator=(Program &&program) {
   m_handle = program.m_handle;
   program.m_handle = 0;
 
+  m_link_error_message = std::move(program.m_link_error_message);
+
   return *this;
 }
 
@@ -42,10 +44,18 @@ void Program::Create() {
 }
 
 void Program::AttachShader(Shader &shader) {
+  if (!m_handle) {
+    throw std::runtime_error("trying attach shader to non existing program");
+  }
+
   glAttachShader(m_handle, shader.GetHandle());
 }
 
 void Program::Link() {
+  if (!m_handle) {
+    throw std::runtime_error("trying link non existing program");
+  }
+
   glLinkProgram(m_handle);
 
   GLint compile_status;
@@ -73,7 +83,46 @@ const std::string &Program::GetLinkError() {
 }
 
 void Program::Use() const {
+  if (!m_handle) {
+    throw std::runtime_error("trying to use non existing program");
+  }
+
   glUseProgram(m_handle);
+}
+
+Program Program::CreateProgram(const char vert_source[], size_t vert_source_len,
+                               const char frag_source[],
+                               size_t frag_source_len) {
+  bool success;
+
+  Shader vertex_shader;
+  vertex_shader.Create(vert_source, vert_source_len, GL_VERTEX_SHADER);
+  success = vertex_shader.IsSuccessfullyCompiled();
+  if (!success) {
+    throw std::runtime_error(vertex_shader.GetCompileError());
+  }
+
+  Shader fragment_shader;
+  fragment_shader.Create(frag_source, frag_source_len, GL_FRAGMENT_SHADER);
+  success = fragment_shader.IsSuccessfullyCompiled();
+  if (!success) {
+    throw std::runtime_error(fragment_shader.GetCompileError());
+  }
+
+  Program program;
+  program.Create();
+  program.AttachShader(vertex_shader);
+  program.AttachShader(fragment_shader);
+  program.Link();
+  success = program.IsSuccessfullyLinked();
+  if (!success) {
+    throw std::runtime_error(program.GetLinkError());
+  }
+
+  vertex_shader.Delete();
+  fragment_shader.Delete();
+
+  return std::move(program);
 }
 
 void Program::LinkErrorHandling() {

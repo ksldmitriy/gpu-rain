@@ -26,6 +26,10 @@ public:
 
   void Use() const;
 
+  static Program CreateProgram(const char vert_source[], size_t vert_source_len,
+                               const char frag_source[],
+                               size_t frag_source_len);
+
 private:
   void LinkErrorHandling();
 
