@@ -27,6 +27,7 @@ public:
               void *data = nullptr);
   void Delete();
 
+  GLuint GetHandle();
   void Bind() const;
   glm::uvec2 GetSize() const;
 

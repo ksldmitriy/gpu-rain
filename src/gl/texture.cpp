@@ -62,6 +62,10 @@ void Texture::Delete() {
   glDeleteTextures(1, &m_handle);
 }
 
+GLuint Texture::GetHandle() {
+  return m_handle;
+}
+
 void Texture::Bind() const {
   glBindTexture(GL_TEXTURE_2D, m_handle);
 }
