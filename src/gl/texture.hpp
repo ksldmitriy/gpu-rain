@@ -9,7 +9,6 @@ typedef int GLint;
 struct TextureCreateInfo {
   GLint internal_format;
   GLuint format;
-  GLenum type;
   GLint min_filter, mag_filter;
   GLint wrap_s, wrap_t;
 };
