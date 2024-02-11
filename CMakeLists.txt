@@ -4,7 +4,7 @@ project(lofi-rain)
 
 # set
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS -m64)
+set(CMAKE_CXX_FLAGS "-m64")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -22,8 +22,14 @@ find_package(glm REQUIRED)
 add_subdirectory(libs/glad)
 
 # program
+set(ASM_SOURCE resources/shader-resources.s)
+enable_language(CXX C ASM)
+set_property(SOURCE ${ASM_SOURCE} PROPERTY LANGUAGE ASM)
+set_property(SOURCE ${ASM_SOURCE} APPEND PROPERTY COMPILE_OPTIONS "-I${CMAKE_SOURCE_DIR}/shaders")
+
 file(GLOB_RECURSE MY_PROJECT_SRC src/*.cpp)
 
-add_executable(lofi-rain ${MY_PROJECT_SRC})
+add_executable(lofi-rain ${MY_PROJECT_SRC} ${ASM_SOURCE})
 
 target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm)
+target_include_directories(lofi-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources")

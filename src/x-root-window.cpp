@@ -31,7 +31,7 @@ void XRootWindow::Close() {
   CloseXDisplay();
 }
 
-void XRootWindow::CreateGLContext() {
+void XRootWindow::CreateGLContext() const {
   int glx_version = gladLoaderLoadGLX(m_display, screen_number);
   if (!glx_version) {
     throw std::runtime_error("cant load glx");
@@ -73,11 +73,11 @@ void XRootWindow::CreateGLContext() {
   glViewport(0, 0, gwa.width, gwa.height);
 }
 
-void XRootWindow::SwapBuffers() {
+void XRootWindow::SwapBuffers() const {
   glXSwapBuffers(m_display, m_window);
 }
 
-std::vector<MonitorDimensions> XRootWindow::GetMonitorDimensions() {
+std::vector<MonitorDimensions> XRootWindow::GetMonitorDimensions() const {
   int monitors_count;
   XRRMonitorInfo *monitors_info =
       XRRGetMonitors(m_display, m_window, 1, &monitors_count);

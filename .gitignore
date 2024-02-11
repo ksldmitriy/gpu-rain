@@ -3,6 +3,9 @@
 !/build.sh
 !/src
 !/src/*
+!/shaders
+!/shaders/*
+!/create-resources.sh
 !/.clang-format
 !/.gitignore
 !/CMakeLists.txt
