@@ -32,4 +32,4 @@ file(GLOB_RECURSE MY_PROJECT_SRC src/*.cpp)
 add_executable(lofi-rain ${MY_PROJECT_SRC} ${ASM_SOURCE})
 
 target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm)
-target_include_directories(lofi-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources")
+target_include_directories(lofi-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources" "${CMAKE_SOURCE_DIR}/libs/stb/include")

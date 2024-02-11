@@ -13,3 +13,5 @@
 /libs/*
 !/libs/glad/
 !/libs/glad/*
+!/libs/stb/
+!/libs/stb/*
