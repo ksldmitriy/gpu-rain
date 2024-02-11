@@ -31,7 +31,7 @@ EBO::~EBO() {
   Destroy();
 }
 
-void EBO::Create(size_t count, GLenum mode, GLuint *data) {
+void EBO::Create(size_t count, GLenum mode, const GLuint *data) {
   if (m_handle) {
     throw std::runtime_error("trying to create ebo over existing one");
   }

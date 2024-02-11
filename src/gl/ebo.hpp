@@ -14,7 +14,7 @@ public:
   EBO &operator=(EBO &&ebo);
   ~EBO();
 
-  void Create(size_t count, GLenum mode, GLuint *data = nullptr);
+  void Create(size_t count, GLenum mode, const GLuint *data = nullptr);
   void Destroy();
 
   void Bind();
