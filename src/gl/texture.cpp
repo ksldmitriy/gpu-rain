@@ -34,7 +34,7 @@ Texture::~Texture() {
 }
 
 void Texture::Create(glm::uvec2 size, TextureCreateInfo &create_info,
-                     void *data) {
+                     const void *data) {
   if (m_handle) {
     throw std::runtime_error("trying to create texture over existing one");
   }

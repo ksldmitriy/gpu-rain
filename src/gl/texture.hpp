@@ -23,7 +23,7 @@ public:
   ~Texture();
 
   void Create(glm::uvec2 size, TextureCreateInfo &create_info,
-              void *data = nullptr);
+              const void *data = nullptr);
   void Delete();
 
   GLuint GetHandle();
