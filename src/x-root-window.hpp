@@ -25,6 +25,8 @@ public:
   void Open();
   void Close();
 
+  glm::uvec2 GetSize();
+  
   void CreateGLContext() const;
   void SwapBuffers() const;
 
@@ -38,6 +40,7 @@ private:
   Display *m_display = nullptr;
   _XScreen *m_screen = nullptr;
   Window m_window = 0;
-
+  glm::uvec2 m_size;
+  
   static constexpr int screen_number = 0;
 };

@@ -25,10 +25,19 @@ void XRootWindow::Open() {
   if (!m_window) {
     throw std::runtime_error("failed to open xroot window");
   }
+
+  XWindowAttributes gwa;
+  XGetWindowAttributes(m_display, m_window, &gwa);
+
+  m_size = glm::uvec2(gwa.width, gwa.height);
 }
 
 void XRootWindow::Close() {
   CloseXDisplay();
+}
+
+glm::uvec2 XRootWindow::GetSize() {
+  return m_size;
 }
 
 void XRootWindow::CreateGLContext() const {
@@ -66,11 +75,6 @@ void XRootWindow::CreateGLContext() const {
     throw std::runtime_error("cant to load gl");
     return;
   }
-
-  XWindowAttributes gwa;
-  XGetWindowAttributes(m_display, m_window, &gwa);
-
-  glViewport(0, 0, gwa.width, gwa.height);
 }
 
 void XRootWindow::SwapBuffers() const {
@@ -89,6 +93,8 @@ std::vector<MonitorDimensions> XRootWindow::GetMonitorDimensions() const {
     dimensions.position = glm::ivec2(monitors_info[i].x, monitors_info[i].y);
     dimensions.size =
         glm::uvec2(monitors_info[i].width, monitors_info[i].height);
+
+    monitor_dimensions[i] = dimensions;
   }
 
   XRRFreeMonitors(monitors_info);
