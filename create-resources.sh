@@ -30,7 +30,7 @@ echo '#pragma once
 
 extern "C" {' > $RESOURCE_HEADER
 
-for file in $(find "$SHADERS_DIR" -type f \( -name "*.vert" -o -name "*.frag" \)); do
+for file in $(find "$SHADERS_DIR" -type f \( -name "*.vert" -o -name "*.frag" -o -name "*.comp" \)); do
 	file_name=$(basename "$file")
 	sed "s/tmpname/${file_name//./_}/g; s/tmpfile/$file_name/g" <<< $SHADER_RESOURCE_TEMPLATE >> $RESOURCE_FILE
 	sed "s/tmpname/${file_name//./_}/g" <<< $SHADER_RESOURCE_HEADER_TEMPLATE >> $RESOURCE_HEADER
