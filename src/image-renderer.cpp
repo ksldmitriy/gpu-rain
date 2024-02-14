@@ -106,6 +106,7 @@ void ImageRenderer::CreateTexture(const unsigned char *image_data,
   create_info.mag_filter = GL_LINEAR;
   create_info.wrap_s = GL_CLAMP_TO_EDGE;
   create_info.wrap_t = GL_CLAMP_TO_EDGE;
+  create_info.type = GL_UNSIGNED_BYTE;
 
   m_texture.Create(size, create_info, image_data);
 }

@@ -11,6 +11,7 @@ struct TextureCreateInfo {
   GLuint format;
   GLint min_filter, mag_filter;
   GLint wrap_s, wrap_t;
+  GLenum type;
 };
 
 class Texture {

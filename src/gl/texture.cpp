@@ -45,7 +45,7 @@ void Texture::Create(glm::uvec2 size, TextureCreateInfo &create_info,
   glBindTexture(GL_TEXTURE_2D, m_handle);
 
   glTexImage2D(GL_TEXTURE_2D, 0, create_info.internal_format, size.x, size.y, 0,
-               create_info.format, GL_UNSIGNED_BYTE, data);
+               create_info.format, create_info.type, data);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, create_info.min_filter);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, create_info.mag_filter);
