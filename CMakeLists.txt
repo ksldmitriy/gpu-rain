@@ -17,6 +17,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 find_package(X11 REQUIRED)
 find_package(OpenGL REQUIRED COMPONENTS GLX OpenGL)
 find_package(glm REQUIRED)
+find_package(OpenEXR REQUIRED)
 
 # libs
 add_subdirectory(libs/glad)
@@ -31,5 +32,5 @@ file(GLOB_RECURSE MY_PROJECT_SRC src/*.cpp)
 
 add_executable(lofi-rain ${MY_PROJECT_SRC} ${ASM_SOURCE})
 
-target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm)
+target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm OpenEXR::OpenEXR)
 target_include_directories(lofi-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources" "${CMAKE_SOURCE_DIR}/libs/stb/include")
