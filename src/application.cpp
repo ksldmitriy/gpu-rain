@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stb/stb_image.h>
 
+#include <ratio>
+
 Application::Application() {
 }
 
@@ -38,36 +40,55 @@ void Application::Init() {
 
   RenderAreaLayoutConstructor render_area_constructor;
   render_area_constructor.ConstructLayout(monitor_dimentions,
-                                          m_color_texture.GetSize(),
+                                          s_framebuffer_size,
                                           m_window.GetSize(), m_render_area);
 
   m_image_renderer.Create(s_test_media_path);
+
+  float drop_size = 9;
+  m_rain_simulation.Create(1024 * 2.f, s_framebuffer_size, drop_size);
+
+  m_prev_frame_time = hires_clock::now();
+  m_delta_time = 0;
 }
 
 void Application::MainLoop() {
   while (true) {
+    UpdateDeltaTime();
+
+    m_rain_simulation.Run(m_delta_time);
+
     DrawToFrambuffer();
     DrawToScreen();
+
     m_window.SwapBuffers();
   }
 }
 
 void Application::DrawToFrambuffer() {
   m_framebuffer.Bind();
-  SetViewport(m_color_texture.GetSize());
+  SetViewport(s_framebuffer_size);
 
-  glClearColor(1.0f, 0.0f, 0.0f, 0.12f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(1.0f, 0.0f, 0.0f, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  glDisable(GL_DEPTH_TEST);
   m_image_renderer.Draw();
+
+  // glEnable(GL_DEPTH_TEST);
+  //  glDepthFunc(GL_LESS);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  m_rain_simulation.Draw();
 }
 
 void Application::DrawToScreen() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   SetViewport(m_window.GetSize());
 
-  glClearColor(1.0f, 0.0f, 0.0f, 0.12f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.0f, 0.0f, 1.0f, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
 
   ProgramsLibrary::GetTextureProgram().Use();
   m_render_area.vao.Bind();
@@ -82,25 +103,64 @@ void Application::Cleanup() {
   m_window.Close();
 }
 
+void Application::UpdateDeltaTime() {
+  time_point_t current_frame_time = hires_clock::now();
+
+  duration_t delta_duration = current_frame_time - m_prev_frame_time;
+  float delta_time_us =
+      chrono::duration_cast<chrono::nanoseconds>(delta_duration).count();
+
+  m_delta_time = delta_time_us * std::nano::num / std::nano::den;
+
+  m_prev_frame_time = current_frame_time;
+}
+
 void Application::CreateFramebuffer() {
-  gl::TextureCreateInfo create_info;
-  create_info.format = GL_RGB;
-  create_info.internal_format = GL_RGB;
-  create_info.min_filter = GL_LINEAR;
-  create_info.mag_filter = GL_LINEAR;
-  create_info.wrap_s = GL_CLAMP_TO_EDGE;
-  create_info.wrap_t = GL_CLAMP_TO_EDGE;
+  gl::TextureCreateInfo color_create_info;
+  color_create_info.format = GL_RGB;
+  color_create_info.internal_format = GL_RGB;
+  color_create_info.min_filter = GL_LINEAR;
+  color_create_info.mag_filter = GL_LINEAR;
+  color_create_info.wrap_s = GL_CLAMP_TO_EDGE;
+  color_create_info.wrap_t = GL_CLAMP_TO_EDGE;
+  color_create_info.type = GL_UNSIGNED_BYTE;
 
-  m_color_texture.Create(glm::uvec2(1920, 1080), create_info, nullptr);
+  m_color_texture.Create(s_framebuffer_size, color_create_info, nullptr);
 
-  m_color_texture.GetHandle();
+  gl::TextureCreateInfo depth_create_info;
+  depth_create_info.format = GL_DEPTH_COMPONENT;
+  depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
+  depth_create_info.min_filter = GL_LINEAR;
+  depth_create_info.mag_filter = GL_LINEAR;
+  depth_create_info.wrap_s = GL_CLAMP_TO_EDGE;
+  depth_create_info.wrap_t = GL_CLAMP_TO_EDGE;
+  depth_create_info.type = GL_FLOAT;
+
+  m_depth_attachment.Create(s_framebuffer_size, depth_create_info, nullptr);
 
   m_framebuffer.Create();
   m_framebuffer.AttachTexture(m_color_texture, GL_COLOR_ATTACHMENT0);
+  m_framebuffer.AttachTexture(m_depth_attachment, GL_DEPTH_ATTACHMENT);
+
+  m_framebuffer.Bind();
+
+  auto result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (result != GL_FRAMEBUFFER_COMPLETE) {
+    switch (result) {
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      std::cout << "incompelete attach" << std::endl;
+      break;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      std::cout << "unsup" << std::endl;
+      break;
+    }
+  }
 }
 
 void Application::SetViewport(glm::uvec2 size) {
   glViewport(0, 0, size.x, size.y);
 }
 
-const char *const Application::s_test_media_path = "media/image.jpg";
+const char *const Application::s_test_media_path = "media/main-color.png";
+
+const glm::uvec2 Application::s_framebuffer_size = glm::uvec2(1920, 1080);

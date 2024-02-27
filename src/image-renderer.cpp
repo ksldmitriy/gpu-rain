@@ -111,12 +111,14 @@ void ImageRenderer::CreateTexture(const unsigned char *image_data,
   m_texture.Create(size, create_info, image_data);
 }
 
+static constexpr float vertex_z = 1.f;
+
 // clang-format off
 const std::array<ImageRenderer::Vertex, 4> ImageRenderer::s_vertices = {
-  Vertex{{-1, -1, 0}, {0, 0}},
-  Vertex{{ 1, -1, 0}, {1, 0}},
-  Vertex{{ 1,  1, 0}, {1, 1}},
-  Vertex{{-1,  1, 0}, {0, 1}}
+  Vertex{{-1, -1, vertex_z}, {0, 0}},
+  Vertex{{ 1, -1, vertex_z}, {1, 0}},
+  Vertex{{ 1,  1, vertex_z}, {1, 1}},
+  Vertex{{-1,  1, vertex_z}, {0, 1}}
 };
 // clang-format on
 
