@@ -33,7 +33,7 @@ Texture::~Texture() {
   Delete();
 }
 
-void Texture::Create(glm::uvec2 size, TextureCreateInfo &create_info,
+void Texture::Create(glm::uvec2 size, const TextureCreateInfo &create_info,
                      const void *data) {
   if (m_handle) {
     throw std::runtime_error("trying to create texture over existing one");
@@ -45,7 +45,7 @@ void Texture::Create(glm::uvec2 size, TextureCreateInfo &create_info,
   glBindTexture(GL_TEXTURE_2D, m_handle);
 
   glTexImage2D(GL_TEXTURE_2D, 0, create_info.internal_format, size.x, size.y, 0,
-               create_info.format, GL_UNSIGNED_BYTE, data);
+               create_info.format, create_info.type, data);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, create_info.min_filter);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, create_info.mag_filter);
@@ -66,7 +66,8 @@ GLuint Texture::GetHandle() {
   return m_handle;
 }
 
-void Texture::Bind() const {
+void Texture::Bind(size_t index) const {
+  glActiveTexture(GL_TEXTURE0 + index);
   glBindTexture(GL_TEXTURE_2D, m_handle);
 }
 

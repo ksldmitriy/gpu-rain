@@ -3,6 +3,7 @@
 #include "shader.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 
 namespace gl {
@@ -88,6 +89,34 @@ void Program::Use() const {
   }
 
   glUseProgram(m_handle);
+}
+
+void Program::SetUniformInt(const char *name, int value) {
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  glUseProgram(m_handle);
+  glUniform1i(location, value);
+}
+
+void Program::SetUniformFloat(const char *name, float value) {
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  glUseProgram(m_handle);
+  glUniform1f(location, value);
+}
+
+void Program::SetUniformFVec3(const char *name, glm::fvec3 value) {
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  glUseProgram(m_handle);
+  glUniform3fv(location, 1, glm::value_ptr(value));
+}
+
+void Program::SetUniformMat4f(const char *name, glm::mat<4, 4, float> value) {
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  glUseProgram(m_handle);
+  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
 Program Program::CreateProgram(const char vert_source[], size_t vert_source_len,

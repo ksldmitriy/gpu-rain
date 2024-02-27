@@ -11,6 +11,7 @@ struct TextureCreateInfo {
   GLuint format;
   GLint min_filter, mag_filter;
   GLint wrap_s, wrap_t;
+  GLenum type;
 };
 
 class Texture {
@@ -22,12 +23,12 @@ public:
   Texture &operator=(Texture &&texture);
   ~Texture();
 
-  void Create(glm::uvec2 size, TextureCreateInfo &create_info,
+  void Create(glm::uvec2 size, const TextureCreateInfo &create_info,
               const void *data = nullptr);
   void Delete();
 
   GLuint GetHandle();
-  void Bind() const;
+  void Bind(size_t index = 0) const;
   glm::uvec2 GetSize() const;
 
 private:

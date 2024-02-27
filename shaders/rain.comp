@@ -1,0 +1,115 @@
+#version 460
+
+struct Droplet {
+  vec3 pos;
+  float splash_time;
+  vec2 top_down_uv;
+};
+
+layout(std430, binding = 0) buffer DropletsSSBO {
+  Droplet droplets_arr[];
+};
+
+layout(binding = 1, offset = 0) uniform atomic_uint acbo;
+
+// constants
+const uint UINT_MAX = ~uint(0);
+
+const vec2 spawn_uv_p1 = vec2(1.f, 0.5f);
+const vec2 spawn_uv_p2 = vec2(0.f, 0.f);
+const vec2 spawn_uv_p3 = vec2(0.f, 1.f);
+
+// uniforms
+uniform int u_drops_count = 0;
+uniform float u_kill_plane;
+uniform float u_top_down_camera_y;
+uniform float u_speed = 0;
+uniform float u_delta_time = 0;
+
+uniform vec3 u_spawn_p1;
+uniform vec3 u_spawn_p2;
+uniform vec3 u_spawn_p3;
+uniform float u_spawn_y_range;
+
+uniform float u_splash_duration;
+
+uniform sampler2D u_top_down_depth_texture;
+
+// logic
+void move_droplet(inout Droplet drop);
+void respawn_droplet(inout Droplet drop);
+bool is_colliding(inout Droplet drop, out float surface_height);
+float random_float(uint seed);
+uint pcg_hash(uint seed);
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+void main() {
+  uint index = gl_GlobalInvocationID.x;
+  if (index >= u_drops_count) {
+    return;
+  }
+
+  if (droplets_arr[index].splash_time == 0) { // falling drop
+    float surface_height;
+    if (is_colliding(droplets_arr[index], surface_height)) {
+      droplets_arr[index].pos.y = surface_height;
+      droplets_arr[index].splash_time = 0.0001;
+      return;
+    }
+
+    if (droplets_arr[index].pos.y < u_kill_plane) {
+      respawn_droplet(droplets_arr[index]);
+      return;
+    }
+
+    move_droplet(droplets_arr[index]);
+
+  } else { // drop hitting surface
+    droplets_arr[index].splash_time += u_delta_time / u_splash_duration;
+
+    if (droplets_arr[index].splash_time > 1) {
+      respawn_droplet(droplets_arr[index]);
+    }
+  }
+}
+
+void move_droplet(inout Droplet drop) {
+  drop.pos.y -= u_speed * u_delta_time;
+}
+
+void respawn_droplet(inout Droplet drop) {
+  uint seed = atomicCounterAdd(acbo, 3);
+  float r1 = random_float(seed + 0);
+  float r2 = random_float(seed + 1);
+  float r3 = random_float(seed + 2);
+
+  float sqrt_r1 = sqrt(r1);
+  float a = 1.f - sqrt_r1;
+  float b = sqrt_r1 * (1.f - r2);
+  float c = sqrt_r1 * r2;
+
+  drop.pos = (u_spawn_p1 * a) + (u_spawn_p2 * b) + (u_spawn_p3 * c);
+  drop.pos.y += u_spawn_y_range * r3;
+
+  drop.top_down_uv = (spawn_uv_p1 * a) + (spawn_uv_p2 * b) + (spawn_uv_p3 * c);
+
+  drop.splash_time = 0;
+}
+
+bool is_colliding(inout Droplet drop, out float surface_height) {
+  surface_height = u_top_down_camera_y -
+                   texture(u_top_down_depth_texture, drop.top_down_uv).x;
+
+  return drop.pos.y < surface_height;
+}
+
+float random_float(uint seed) {
+  uint hash = pcg_hash(seed);
+  return float(hash) / float(UINT_MAX);
+}
+
+uint pcg_hash(uint seed) {
+  uint state = seed * 747796405u + 2891336453u;
+  uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+  return (word >> 22u) ^ word;
+}
