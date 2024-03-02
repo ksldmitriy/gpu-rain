@@ -15,10 +15,6 @@ layout(binding = 1, offset = 0) uniform atomic_uint acbo;
 // constants
 const uint UINT_MAX = ~uint(0);
 
-const vec2 spawn_uv_p1 = vec2(1.f, 0.5f);
-const vec2 spawn_uv_p2 = vec2(0.f, 0.f);
-const vec2 spawn_uv_p3 = vec2(0.f, 1.f);
-
 // uniforms
 uniform int u_drops_count = 0;
 uniform float u_kill_plane;
@@ -26,9 +22,18 @@ uniform float u_top_down_camera_y;
 uniform float u_speed = 0;
 uniform float u_delta_time = 0;
 
-uniform vec3 u_spawn_p1;
-uniform vec3 u_spawn_p2;
-uniform vec3 u_spawn_p3;
+uniform vec3 u_spawn_nl;
+uniform vec3 u_spawn_nr;
+uniform vec3 u_spawn_fl;
+uniform vec3 u_spawn_fr;
+
+uniform vec2 u_spawn_nl_uv;
+uniform vec2 u_spawn_nr_uv;
+uniform vec2 u_spawn_fl_uv;
+uniform vec2 u_spawn_fr_uv;
+
+uniform float u_spawn_ratio;
+
 uniform float u_spawn_y_range;
 
 uniform float u_splash_duration;
@@ -51,14 +56,18 @@ void main() {
 
   if (droplets_arr[index].splash_time == 0) { // falling drop
     float surface_height;
-    if (is_colliding(droplets_arr[index], surface_height)) {
-      droplets_arr[index].pos.y = surface_height;
-      droplets_arr[index].splash_time = 0.0001;
+    is_colliding(droplets_arr[index], surface_height);
+
+    surface_height = max(surface_height, u_kill_plane);
+
+    if (droplets_arr[index].pos.y < u_kill_plane && false) {
+      respawn_droplet(droplets_arr[index]);
       return;
     }
 
-    if (droplets_arr[index].pos.y < u_kill_plane) {
-      respawn_droplet(droplets_arr[index]);
+    if (surface_height > droplets_arr[index].pos.y) {
+      droplets_arr[index].pos.y = surface_height;
+      droplets_arr[index].splash_time = 0.0001;
       return;
     }
 
@@ -78,20 +87,33 @@ void move_droplet(inout Droplet drop) {
 }
 
 void respawn_droplet(inout Droplet drop) {
-  uint seed = atomicCounterAdd(acbo, 3);
-  float r1 = random_float(seed + 0);
-  float r2 = random_float(seed + 1);
-  float r3 = random_float(seed + 2);
+  uint seed = atomicCounterAdd(acbo, 4);
+
+  float r_p = random_float(seed + 0);
+
+  float r1 = random_float(seed + 1);
+  float r2 = random_float(seed + 2);
+  float r3 = random_float(seed + 3);
+
+  vec3 p3;
+  vec2 p3_uv;
+  if (r_p < u_spawn_ratio) {
+    p3 = u_spawn_fl;
+    p3_uv = u_spawn_fl_uv;
+  } else {
+    p3 = u_spawn_nr;
+    p3_uv = u_spawn_nr_uv;
+  }
 
   float sqrt_r1 = sqrt(r1);
   float a = 1.f - sqrt_r1;
   float b = sqrt_r1 * (1.f - r2);
   float c = sqrt_r1 * r2;
 
-  drop.pos = (u_spawn_p1 * a) + (u_spawn_p2 * b) + (u_spawn_p3 * c);
+  drop.pos = (u_spawn_nl * a) + (p3 * b) + (u_spawn_fr * c);
   drop.pos.y += u_spawn_y_range * r3;
 
-  drop.top_down_uv = (spawn_uv_p1 * a) + (spawn_uv_p2 * b) + (spawn_uv_p3 * c);
+  drop.top_down_uv = (u_spawn_nl_uv * a) + (p3_uv * b) + (u_spawn_fr_uv * c);
 
   drop.splash_time = 0;
 }

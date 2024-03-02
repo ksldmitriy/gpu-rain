@@ -45,8 +45,9 @@ void main() {
     vertex = a_splash_pos;
   }
 
-  vec2 scaled_vertex = vertex * map(pos4.w, vec2(u_near_plane, u_far_plane),
-                                    vec2(u_max_drop_size, u_min_drop_size));
+  vec2 scaled_vertex = vertex / 2.3f;
+  // vec2 scaled_vertex = vertex * map(pos4.w, vec2(u_near_plane, u_far_plane),
+  //                                   vec2(u_max_drop_size, u_min_drop_size));
 
   vec2 v_pos = vec2(pos) + scaled_vertex;
 
@@ -56,7 +57,8 @@ void main() {
 
   f_uv = a_uv;
 
-  gl_Position = vec4(v_pos, (pos.z + 1.f) / 2.f, 1);
+  // gl_Position = vec4(v_pos, (pos.z + 1.f) / 2.f, 1);
+  gl_Position = vec4(v_pos, 0, 1);
 }
 
 float map(float value, vec2 from, vec2 to) {

@@ -22,6 +22,7 @@ void main() {
   if (f_is_falling != 0) {
     vec4 tex_sample = texture(drop_fall_texture, f_uv);
     FragColor = tex_sample;
+	//discard;
   } else {
     vec4 tex_sample = texture(drop_splash_texture, f_uv);
     FragColor = tex_sample;

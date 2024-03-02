@@ -30,6 +30,7 @@ public:
   void SetUniformInt(const char *name, int value);
   void SetUniformFloat(const char *name, float value);
   void SetUniformFVec3(const char *name, glm::fvec3 value);
+  void SetUniformFVec2(const char *name, glm::fvec2 value);
   void SetUniformMat4f(const char *name, glm::mat<4, 4, float> value);
 
   static Program CreateProgram(const char vert_source[], size_t vert_source_len,
