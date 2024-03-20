@@ -11,6 +11,18 @@
 #include <stb/stb_image.h>
 #include <vector>
 
+std::ostream &operator<<(std::ostream &os, glm::fvec2 vec) {
+  os << "(" << vec.x << ", " << vec.y << ")";
+
+  return os;
+}
+
+std::ostream &operator<<(std::ostream &os, glm::fvec3 vec) {
+  os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+
+  return os;
+}
+
 RainSimulation::RainSimulation() {
 }
 
@@ -35,34 +47,49 @@ RainSimulation::~RainSimulation() {
 }
 
 void RainSimulation::Create(size_t droplets_count, glm::uvec2 framebuffer_size,
-                            float droplet_size) {
+                            glm::fvec2 droplet_size, glm::fvec2 splash_size) {
   m_droplets_count = droplets_count;
   m_framebuffer_size = framebuffer_size;
   m_droplet_size = droplet_size;
+  m_splash_size = splash_size;
 
-  CalculatePositions();
+  CreateProjectionMatrix();
+  CalculateSpawnPositions();
+  CalculateSpawnRation();
 
   CreateComputeBuffers();
-
   CreateRenderObjects();
 
   CreateDepthTexture();
-
   CreateDropTexture();
+
+  glm::fvec4 test_nl = m_transform_matrix * glm::fvec4(m_spawn_nl, 1);
+  glm::fvec4 test_nr = m_transform_matrix * glm::fvec4(m_spawn_nr, 1);
+  glm::fvec4 test_fl = m_transform_matrix * glm::fvec4(m_spawn_fl, 1);
+  glm::fvec4 test_fr = m_transform_matrix * glm::fvec4(m_spawn_fr, 1);
 }
 
 void RainSimulation::Run(float delta_time) {
   gl::Program &program = ProgramsLibrary::GetRainComputeProgram();
   program.SetUniformInt("u_drops_count", m_droplets_count);
-  program.SetUniformFloat("u_kill_plane", m_kill_plane);
-  program.SetUniformFloat("u_top_down_camera_y", 15.f);
+  program.SetUniformFloat("u_kill_plane", s_kill_plane);
+  program.SetUniformFloat("u_top_down_camera_y", s_top_down_camera_y);
   program.SetUniformFloat("u_speed", s_droplet_speed);
   program.SetUniformFloat("u_delta_time", delta_time);
 
-  program.SetUniformFVec3("u_spawn_p1", m_spawn_camera);
-  program.SetUniformFVec3("u_spawn_p2", m_spawn_left);
-  program.SetUniformFVec3("u_spawn_p3", m_spawn_right);
-  program.SetUniformFloat("u_spawn_y_range", 9.f);
+  program.SetUniformFVec3("u_spawn_nl", m_spawn_nl);
+  program.SetUniformFVec3("u_spawn_nr", m_spawn_nr);
+  program.SetUniformFVec3("u_spawn_fl", m_spawn_fl);
+  program.SetUniformFVec3("u_spawn_fr", m_spawn_fr);
+
+  program.SetUniformFVec2("u_spawn_nl_uv", m_spawn_nl_uv);
+  program.SetUniformFVec2("u_spawn_nr_uv", m_spawn_nr_uv);
+  program.SetUniformFVec2("u_spawn_fl_uv", m_spawn_fl_uv);
+  program.SetUniformFVec2("u_spawn_fr_uv", m_spawn_fr_uv);
+
+  program.SetUniformFloat("u_spawn_ratio", m_spawn_ratio);
+
+  program.SetUniformFloat("u_spawn_y_range", 0.f);
   program.SetUniformFloat("u_splash_duration", s_splash_time);
 
   program.Use();
@@ -83,8 +110,8 @@ void RainSimulation::Draw() {
 
   gl::Program &program = ProgramsLibrary::GetRainDrawProgram();
   program.SetUniformMat4f("u_transform_matrix", m_transform_matrix);
-  program.SetUniformFloat("u_near_plane", s_near_plane);
-  program.SetUniformFloat("u_far_plane", s_far_plane);
+  program.SetUniformFloat("u_near_plane", 0);
+  program.SetUniformFloat("u_far_plane", m_spawn_nl.z - m_spawn_fl.z);
   program.SetUniformFloat("u_min_drop_size", s_min_drop_size);
   program.SetUniformFloat("u_max_drop_size", s_max_drop_size);
   program.SetUniformFVec3("u_drop_color", s_drop_color);
@@ -125,12 +152,12 @@ void RainSimulation::CreateComputeBuffers() {
 void RainSimulation::CreateRenderObjects() {
   std::array<DropletVertex, 4> droplet_vertices = s_droplet_vertices;
 
-  glm::fvec2 droplet_gl_size = glm::fvec2(m_droplet_size, m_droplet_size) /
-                               glm::fvec2(m_framebuffer_size);
+  glm::fvec2 droplet_gl_size = m_droplet_size / glm::fvec2(m_framebuffer_size);
+  glm::fvec2 splash_gl_size = m_splash_size / glm::fvec2(m_framebuffer_size);
 
   for (DropletVertex &vertex : droplet_vertices) {
     vertex.fall_pos *= droplet_gl_size;
-    vertex.splash_pos *= droplet_gl_size;
+    vertex.splash_pos *= splash_gl_size;
   }
 
   m_vbo.Create(4 * sizeof(DropletVertex), GL_STATIC_DRAW,
@@ -143,43 +170,85 @@ void RainSimulation::CreateRenderObjects() {
   m_ebo.Create(6, GL_STATIC_DRAW, s_droplet_indices);
 }
 
-void RainSimulation::CalculatePositions() {
-  float vertical_fov = CalculateVerticalFov();
+void RainSimulation::CreateProjectionMatrix() {
+  float vfov = CalculateVerticalFov();
 
-  m_spawn_min.x = s_camera_pos.x - (s_far_plane * tan(s_fov / 2.f));
-  m_spawn_max.x = s_camera_pos.x + (s_far_plane * tan(s_fov / 2.f));
-
-  m_spawn_min.y = s_camera_pos.y + (s_far_plane * tan(vertical_fov / 2.f));
-  m_spawn_max.y = m_spawn_min.y + 0.0;
-  m_kill_plane =
-      s_camera_pos.y - (s_far_plane * tan(vertical_fov / 2.f)) - 0.1f;
-
-  m_spawn_min.z = s_camera_pos.z + 0.2f;
-  m_spawn_max.z = s_max_z;
-
-  m_spawn_camera = s_camera_pos + glm::fvec3(0, 4, 0);
-
-  m_spawn_left.x = s_camera_pos.x - (s_far_plane * tan(s_fov / 2.f));
-  m_spawn_right.x = s_camera_pos.x + (s_far_plane * tan(s_fov / 2.f));
-
-  m_spawn_left.y = m_spawn_camera.y;
-  m_spawn_right.y = m_spawn_camera.y;
-
-  m_spawn_left.z = s_max_z;
-  m_spawn_right.z = s_max_z;
-
-  glm::mat4 view_matrix = glm::lookAt(
-      s_camera_pos, s_camera_pos + glm::fvec3(0, 0, 1), glm::fvec3(0, 1, 0));
+  glm::mat4 view_matrix = glm::lookAt(glm::fvec3(0, 0, 0), glm::fvec3(0, 0, -1),
+                                      glm::fvec3(0, 1, 0));
 
   glm::mat4 projection_matrix =
-      glm::perspective(vertical_fov, 16.0f / 9.0f, 0.01f, s_far_plane);
+      glm::perspective(vfov, 16.0f / 9.0f, s_min_z, s_max_z);
 
   m_transform_matrix = projection_matrix * view_matrix;
 }
 
+void RainSimulation::CalculateSpawnPositions() {
+  float vfov = CalculateVerticalFov();
+
+  // x
+  float x_tan = tan(s_hfov / 2.f);
+
+  m_spawn_nl.x = -s_min_z * x_tan;
+  m_spawn_nr.x = s_min_z * x_tan;
+
+  m_spawn_fl.x = -s_max_z * x_tan;
+  m_spawn_fr.x = s_max_z * x_tan;
+
+  // y
+  float y_tan = tan(vfov / 2.f);
+  const float const_y = 10.f;
+
+  m_spawn_nl.y = const_y;
+  m_spawn_nr.y = const_y;
+
+  m_spawn_fl.y = const_y;
+  m_spawn_fr.y = const_y;
+
+  // z
+  m_spawn_nl.z = -s_min_z;
+  m_spawn_nr.z = -s_min_z;
+
+  m_spawn_fl.z = -s_max_z;
+  m_spawn_fr.z = -s_max_z;
+
+  // uv x
+  float near_x_uv = (s_min_z * x_tan) / 28;
+  m_spawn_nl_uv.x = 0.5f - near_x_uv;
+  m_spawn_nr_uv.x = 0.5f + near_x_uv;
+
+  float far_x_uv = (s_max_z * x_tan) / 28;
+  m_spawn_fl_uv.x = 0.5f - far_x_uv;
+  m_spawn_fr_uv.x = 0.5f + far_x_uv;
+
+  // uv y
+  m_spawn_nl_uv.y = 1;
+  m_spawn_nr_uv.y = 1;
+
+  m_spawn_fl_uv.y = 0;
+  m_spawn_fr_uv.y = 0;
+}
+
+static float triangle_area(glm::fvec3 p1, glm::fvec3 p2, glm::fvec3 p3) {
+  glm::fvec3 v1 = p2 - p1;
+  glm::fvec3 v2 = p3 - p1;
+
+  glm::fvec3 cross = glm::cross(v1, v2);
+
+  float magnitude = glm::length(cross);
+
+  return 0.5f * magnitude;
+}
+
+void RainSimulation::CalculateSpawnRation() {
+  float area1 = triangle_area(m_spawn_fr, m_spawn_nl, m_spawn_fl);
+  float area2 = triangle_area(m_spawn_fr, m_spawn_nl, m_spawn_nr);
+
+  m_spawn_ratio = area1 / (area1 + area2);
+}
+
 float RainSimulation::CalculateVerticalFov() {
   float aspect_ration = m_framebuffer_size.y / (float)m_framebuffer_size.x;
-  float vertical_fov = 2 * atanf(tanf(s_fov / 2.f) * aspect_ration);
+  float vertical_fov = 2 * atanf(tanf(s_hfov / 2.f) * aspect_ration);
 
   return vertical_fov;
 }
@@ -243,15 +312,13 @@ void RainSimulation::CreateDropTexture() {
 }
 
 void RainSimulation::GenerateRandomDrop(RainDroplet &drop) {
-  static const glm::fvec2 spawn_uv_p1(1.f, 0.5f);
-  static const glm::fvec2 spawn_uv_p2(0.f, 0.f);
-  static const glm::fvec2 spawn_uv_p3(0.f, 1.f);
-
   static std::mt19937_64 mt;
   static const float y_range =
-      (((m_spawn_left.y + m_spawn_right.y) / 2.f) - m_kill_plane) * 3.f;
+      (((m_spawn_fl.y + m_spawn_fr.y) / 2.f) - s_kill_plane) * 3.f;
 
   std::uniform_real_distribution<float> dt(0, 1);
+  float r_p = dt(mt);
+
   float r1 = dt(mt);
   float r2 = dt(mt);
   float r3 = dt(mt);
@@ -261,39 +328,45 @@ void RainSimulation::GenerateRandomDrop(RainDroplet &drop) {
   float b = sqrt_r1 * (1.f - r2);
   float c = sqrt_r1 * r2;
 
-  drop.pos = (m_spawn_camera * a) + (m_spawn_left * b) + (m_spawn_right * c);
+  glm::fvec3 p3;
+  glm::fvec2 p3_uv;
+  if (r_p < m_spawn_ratio) {
+    p3 = m_spawn_fl;
+    p3_uv = m_spawn_fl_uv;
+  } else {
+    p3 = m_spawn_nr;
+    p3_uv = m_spawn_nr_uv;
+  }
+
+  drop.pos = (m_spawn_nl * a) + (p3 * b) + (m_spawn_fr * c);
   drop.pos.y += y_range * r3;
 
-  drop.top_down_uv = (spawn_uv_p1 * a) + (spawn_uv_p2 * b) + (spawn_uv_p3 * c);
+  drop.top_down_uv = (m_spawn_nl_uv * a) + (p3_uv * b) + (m_spawn_fr_uv * c);
 
   drop.splash_time = 0;
 }
-
-static constexpr float drop_fall_height = 16.f;
-static constexpr float drop_splash_width = 3.5f;
-static constexpr float drop_splash_height = 2.7f;
 
 // clang-format off
 const std::array<RainSimulation::DropletVertex, 4> RainSimulation::s_droplet_vertices = {
   {
 	{
 	  glm::fvec2(-1, 0),
-	  glm::fvec2(-drop_splash_width, 0),
+	  glm::fvec2(-1, 0),
 	  glm::fvec2(0, 0)
 	},
 	{
 	  glm::fvec2(1, 0),
-	  glm::fvec2(drop_splash_width, 0),
+	  glm::fvec2(1, 0),
 	  glm::fvec2(1, 0)
 	},
 	{
-	  glm::fvec2(1, drop_fall_height * 2),
-	  glm::fvec2(drop_splash_width, drop_splash_height * 2),
+	  glm::fvec2(1, 1),
+	  glm::fvec2(1, 2),
 	  glm::fvec2(1, 1),
 	},
 	{
-	  glm::fvec2(-1, drop_fall_height * 2),
-	  glm::fvec2(-drop_splash_width, drop_splash_height * 2),
+	  glm::fvec2(-1, 2),
+	  glm::fvec2(-1, 2),
 	  glm::fvec2(0, 1)
 	}
   }
@@ -310,13 +383,21 @@ const std::vector<gl::VAO::VertexField> RainSimulation::s_droplet_vertex_attribs
 
 const gl::GLuint RainSimulation::s_droplet_indices[6] = {0, 1, 2, 0, 2, 3};
 
-const float RainSimulation::s_max_z = 5;
-const float RainSimulation::s_fov = glm::radians(60.f);
-const glm::fvec3 RainSimulation::s_camera_pos = glm::fvec3(0, 3, -10);
-const float RainSimulation::s_near_plane = 0.01f;
-const float RainSimulation::s_far_plane = s_max_z - s_camera_pos.z;
-const float RainSimulation::s_min_drop_size = 0.35f;
+static constexpr float cam_z = -16;
+static constexpr float td_cam_size = 28;
+
+// scene
+const float RainSimulation::s_min_z = -5.22811 - cam_z;
+const float RainSimulation::s_max_z = RainSimulation::s_min_z + td_cam_size;
+const float RainSimulation::s_hfov = glm::radians(60.f);
+const float RainSimulation::s_top_down_camera_y = 9 + 6.5;
+
+const float RainSimulation::s_near_plane = s_min_z;
+const float RainSimulation::s_kill_plane = -4.5;
+
+// drop
+const float RainSimulation::s_min_drop_size = 0.1f;
 const float RainSimulation::s_max_drop_size = 1.f;
 const glm::fvec3 RainSimulation::s_drop_color = glm::fvec3(0.8f, 0.8f, 0.95f);
-const float RainSimulation::s_droplet_speed = 12.f;
+const float RainSimulation::s_droplet_speed = 18.f;
 const float RainSimulation::s_splash_time = 0.18f;

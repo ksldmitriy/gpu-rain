@@ -45,8 +45,10 @@ void Application::Init() {
 
   m_image_renderer.Create(s_test_media_path);
 
-  float drop_size = 9;
-  m_rain_simulation.Create(1024 * 2.f, s_framebuffer_size, drop_size);
+  glm::fvec2 drop_size(1.5f, 42);
+  glm::fvec2 splash_size(30, 23);
+  m_rain_simulation.Create(1024 * 6.f, s_framebuffer_size, drop_size,
+                           splash_size);
 
   m_prev_frame_time = hires_clock::now();
   m_delta_time = 0;

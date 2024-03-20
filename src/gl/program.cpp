@@ -112,6 +112,13 @@ void Program::SetUniformFVec3(const char *name, glm::fvec3 value) {
   glUniform3fv(location, 1, glm::value_ptr(value));
 }
 
+void Program::SetUniformFVec2(const char *name, glm::fvec2 value) {
+  GLint location = glGetUniformLocation(m_handle, name);
+
+  glUseProgram(m_handle);
+  glUniform2fv(location, 1, glm::value_ptr(value));
+}
+
 void Program::SetUniformMat4f(const char *name, glm::mat<4, 4, float> value) {
   GLint location = glGetUniformLocation(m_handle, name);
 

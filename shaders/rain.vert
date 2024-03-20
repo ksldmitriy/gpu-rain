@@ -32,8 +32,8 @@ void main() {
   uint index = gl_InstanceID;
   Droplet drop = droplets_arr[index];
 
-  vec4 pos4 = u_transform_matrix * vec4(drop.pos, 1);
-  vec3 pos = vec3(pos4) / pos4.w;
+  vec4 instance_pos4 = u_transform_matrix * vec4(drop.pos, 1);
+  vec3 instance_pos = vec3(instance_pos4) / instance_pos4.w;
 
   vec2 vertex;
 
@@ -45,18 +45,22 @@ void main() {
     vertex = a_splash_pos;
   }
 
-  vec2 scaled_vertex = vertex * map(pos4.w, vec2(u_near_plane, u_far_plane),
-                                    vec2(u_max_drop_size, u_min_drop_size));
+  float distance_scale = map(instance_pos4.w, vec2(u_near_plane, u_far_plane),
+                             vec2(u_max_drop_size, u_min_drop_size));
 
-  vec2 v_pos = vec2(pos) + scaled_vertex;
+  vec2 scaled_vertex =
+      vec2(vertex.x * distance_scale,
+           vertex.y * (f_is_falling == 1 ? 1 : distance_scale));
+
+  vec2 v_pos = vec2(instance_pos) + scaled_vertex;
 
   f_screen_uv = (vec2(v_pos) + vec2(1, 1)) / 2.f;
   f_screen_uv.y = 1.f - f_screen_uv.y;
-  f_real_depth = pos4.w;
+  f_real_depth = instance_pos4.w;
 
   f_uv = a_uv;
 
-  gl_Position = vec4(v_pos, (pos.z + 1.f) / 2.f, 1);
+  gl_Position = vec4(v_pos, 0, 1);
 }
 
 float map(float value, vec2 from, vec2 to) {

@@ -36,7 +36,7 @@ public:
   ~RainSimulation();
 
   void Create(size_t droplets_count, glm::uvec2 framebuffer_size,
-              float droplet_size);
+              glm::fvec2 droplet_size, glm::fvec2 splash_size);
 
   void Run(float delta_time);
   void Draw();
@@ -45,7 +45,9 @@ private:
   void CreateComputeBuffers();
   void CreateRenderObjects();
 
-  void CalculatePositions();
+  void CreateProjectionMatrix();
+  void CalculateSpawnPositions();
+  void CalculateSpawnRation();
   float CalculateVerticalFov();
 
   void CreateDepthTexture();
@@ -56,7 +58,8 @@ private:
 private:
   size_t m_droplets_count;
   glm::uvec2 m_framebuffer_size;
-  float m_droplet_size;
+  glm::fvec2 m_droplet_size;
+  glm::fvec2 m_splash_size;
 
   gl::SSBO m_ssbo;
 
@@ -65,19 +68,24 @@ private:
   gl::EBO m_ebo;
   gl::ACBO m_acbo;
 
-  glm::fvec3 m_spawn_min;
-  glm::fvec3 m_spawn_max;
   glm::mat4 m_transform_matrix;
-  float m_kill_plane;
 
   gl::Texture m_main_depth;
   gl::Texture m_top_down_depth;
   gl::Texture m_droplet_texture;
   gl::Texture m_droplet_splash_texture;
 
-  glm::fvec3 m_spawn_camera;
-  glm::fvec3 m_spawn_left;
-  glm::fvec3 m_spawn_right;
+  glm::fvec3 m_spawn_nl;
+  glm::fvec3 m_spawn_nr;
+  glm::fvec3 m_spawn_fl;
+  glm::fvec3 m_spawn_fr;
+
+  glm::fvec2 m_spawn_nl_uv;
+  glm::fvec2 m_spawn_nr_uv;
+  glm::fvec2 m_spawn_fl_uv;
+  glm::fvec2 m_spawn_fr_uv;
+
+  float m_spawn_ratio;
 
   static const std::array<DropletVertex, 4> s_droplet_vertices;
   static const std::vector<gl::VAO::VertexField> s_droplet_vertex_attribs;
@@ -85,11 +93,20 @@ private:
 
   static constexpr uint s_compute_group_size = 64;
 
+  // scene
+  static const float s_min_z;
   static const float s_max_z;
-  static const float s_fov;
-  static const glm::fvec3 s_camera_pos;
+  static const float s_depth_widht;
+  static const float s_hfov;
+  static const float s_top_down_camera_y;
+
   static const float s_near_plane;
-  static const float s_far_plane;
+  static const float s_kill_plane;
+
+  static const float depth_texture_min_z;
+  static const float depth_texture_max_z;
+
+  // drop
   static const float s_min_drop_size;
   static const float s_max_drop_size;
   static const glm::fvec3 s_drop_color;
