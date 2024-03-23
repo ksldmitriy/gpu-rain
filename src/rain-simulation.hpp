@@ -103,13 +103,15 @@ private:
   static const float s_near_plane;
   static const float s_kill_plane;
 
-  static const float depth_texture_min_z;
-  static const float depth_texture_max_z;
+  static const float s_depth_texture_min_z;
+  static const float s_depth_texture_max_z;
 
   // drop
   static const float s_min_drop_size;
   static const float s_max_drop_size;
-  static const glm::fvec3 s_drop_color;
   static const float s_droplet_speed;
   static const float s_splash_time;
+
+  static const char* s_main_depth_image_path;
+  static const char* s_top_down_depth_image_path;
 };

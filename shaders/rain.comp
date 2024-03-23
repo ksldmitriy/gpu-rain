@@ -34,8 +34,6 @@ uniform vec2 u_spawn_fr_uv;
 
 uniform float u_spawn_ratio;
 
-uniform float u_spawn_y_range;
-
 uniform float u_splash_duration;
 
 uniform sampler2D u_top_down_depth_texture;
@@ -111,7 +109,6 @@ void respawn_droplet(inout Droplet drop) {
   float c = sqrt_r1 * r2;
 
   drop.pos = (u_spawn_nl * a) + (p3 * b) + (u_spawn_fr * c);
-  drop.pos.y += u_spawn_y_range * r3;
 
   drop.top_down_uv = (u_spawn_nl_uv * a) + (p3_uv * b) + (u_spawn_fr_uv * c);
 

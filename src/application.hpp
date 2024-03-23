@@ -56,6 +56,11 @@ private:
   time_point_t m_prev_frame_time;
   float m_delta_time;
 
+  static const size_t s_drops_count;
+  
+  static const glm::fvec2 s_drop_size;
+  static const glm::fvec2 s_splash_size;
+
   static const char *const s_test_media_path;
   static const glm::uvec2 s_framebuffer_size;
 };

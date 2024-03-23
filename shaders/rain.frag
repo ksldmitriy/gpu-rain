@@ -10,8 +10,6 @@ layout(binding = 1) uniform sampler2D depth_texture;
 layout(binding = 2) uniform sampler2D drop_fall_texture;
 layout(binding = 3) uniform sampler2D drop_splash_texture;
 
-uniform vec3 u_drop_color;
-
 void main() {
   float bg_depth = texture(depth_texture, f_screen_uv).x;
 
