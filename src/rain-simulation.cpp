@@ -11,18 +11,6 @@
 #include <stb/stb_image.h>
 #include <vector>
 
-std::ostream &operator<<(std::ostream &os, glm::fvec2 vec) {
-  os << "(" << vec.x << ", " << vec.y << ")";
-
-  return os;
-}
-
-std::ostream &operator<<(std::ostream &os, glm::fvec3 vec) {
-  os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
-
-  return os;
-}
-
 RainSimulation::RainSimulation() {
 }
 
@@ -89,7 +77,6 @@ void RainSimulation::Run(float delta_time) {
 
   program.SetUniformFloat("u_spawn_ratio", m_spawn_ratio);
 
-  program.SetUniformFloat("u_spawn_y_range", 0.f);
   program.SetUniformFloat("u_splash_duration", s_splash_time);
 
   program.Use();
@@ -114,7 +101,6 @@ void RainSimulation::Draw() {
   program.SetUniformFloat("u_far_plane", m_spawn_nl.z - m_spawn_fl.z);
   program.SetUniformFloat("u_min_drop_size", s_min_drop_size);
   program.SetUniformFloat("u_max_drop_size", s_max_drop_size);
-  program.SetUniformFVec3("u_drop_color", s_drop_color);
 
   program.Use();
 
@@ -255,13 +241,13 @@ float RainSimulation::CalculateVerticalFov() {
 
 void RainSimulation::CreateDepthTexture() {
   DepthImage main_image;
-  main_image.Open("media/main-depth.exr");
+  main_image.Open(s_main_depth_image_path);
   if (!main_image.IsOpen()) {
     throw std::runtime_error("cant open main depth image");
   }
 
   DepthImage top_down_image;
-  top_down_image.Open("media/top-down-depth.exr");
+  top_down_image.Open(s_top_down_depth_image_path);
   if (!top_down_image.IsOpen()) {
     throw std::runtime_error("cant open top down depth image");
   }
@@ -314,7 +300,7 @@ void RainSimulation::CreateDropTexture() {
 void RainSimulation::GenerateRandomDrop(RainDroplet &drop) {
   static std::mt19937_64 mt;
   static const float y_range =
-      (((m_spawn_fl.y + m_spawn_fr.y) / 2.f) - s_kill_plane) * 3.f;
+      (((m_spawn_fl.y + m_spawn_fr.y) / 2.f) - s_kill_plane) * 1.f;
 
   std::uniform_real_distribution<float> dt(0, 1);
   float r_p = dt(mt);
@@ -382,22 +368,3 @@ const std::vector<gl::VAO::VertexField> RainSimulation::s_droplet_vertex_attribs
 // clang-format on
 
 const gl::GLuint RainSimulation::s_droplet_indices[6] = {0, 1, 2, 0, 2, 3};
-
-static constexpr float cam_z = -16;
-static constexpr float td_cam_size = 28;
-
-// scene
-const float RainSimulation::s_min_z = -5.22811 - cam_z;
-const float RainSimulation::s_max_z = RainSimulation::s_min_z + td_cam_size;
-const float RainSimulation::s_hfov = glm::radians(60.f);
-const float RainSimulation::s_top_down_camera_y = 9 + 6.5;
-
-const float RainSimulation::s_near_plane = s_min_z;
-const float RainSimulation::s_kill_plane = -4.5;
-
-// drop
-const float RainSimulation::s_min_drop_size = 0.1f;
-const float RainSimulation::s_max_drop_size = 1.f;
-const glm::fvec3 RainSimulation::s_drop_color = glm::fvec3(0.8f, 0.8f, 0.95f);
-const float RainSimulation::s_droplet_speed = 18.f;
-const float RainSimulation::s_splash_time = 0.18f;
