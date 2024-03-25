@@ -1,6 +1,8 @@
 /*
 /*/
 !/build.sh
+!/run.sh
+!/clean.sh
 !/src
 !/src/*
 !/shaders
