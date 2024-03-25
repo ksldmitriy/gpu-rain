@@ -1,5 +1,6 @@
 #include "framebuffer.hpp"
 
+#include "ms-texture.hpp"
 #include "texture.hpp"
 
 #include <glad/gl.h>
@@ -48,6 +49,12 @@ void Framebuffer::AttachTexture(Texture &texture, GLenum target) {
                          texture.GetHandle(), 0);
 }
 
+void Framebuffer::AttachMsTexture(MsTexture &texture, GLenum target) {
+  glBindFramebuffer(GL_FRAMEBUFFER, m_handle);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, target, GL_TEXTURE_2D_MULTISAMPLE,
+                         texture.GetHandle(), 0);
+}
+
 void Framebuffer::Delete() {
   if (!m_handle) {
     throw std::runtime_error("trying to delete non existing framebuffer");
@@ -55,6 +62,10 @@ void Framebuffer::Delete() {
 
   glDeleteFramebuffers(1, &m_handle);
   m_handle = 0;
+}
+
+GLuint Framebuffer::GetHande() {
+  return m_handle;
 }
 
 void Framebuffer::Bind() const {

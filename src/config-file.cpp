@@ -3,9 +3,9 @@
 
 // Application
 
-const size_t Application::s_drops_count = 1024 * 6;
+const size_t Application::s_drops_count = 1024 * 2;
 
-const glm::fvec2 Application::s_drop_size = glm::fvec2(1, 52);
+const glm::fvec2 Application::s_drop_size = glm::fvec2(3.6f, 52);
 const glm::fvec2 Application::s_splash_size = glm::fvec2(30, 23);
 
 const char *const Application::s_test_media_path = "media/main-color.png";
@@ -26,10 +26,13 @@ const float RainSimulation::s_near_plane = s_min_z;
 const float RainSimulation::s_kill_plane = -4.5;
 
 // drop
-const float RainSimulation::s_min_drop_size = 0.1f;
+const float RainSimulation::s_min_drop_size = 0.2f;
 const float RainSimulation::s_max_drop_size = 1.f;
 const float RainSimulation::s_droplet_speed = 18.f;
 const float RainSimulation::s_splash_time = 0.12f;
+
+const float RainSimulation::s_fall_drop_alpha_coefficient = 0.7f;
+const float RainSimulation::s_splash_alpha_coefficient = 0.9f;
 
 const char *RainSimulation::s_main_depth_image_path = "media/main-depth.exr";
 const char *RainSimulation::s_top_down_depth_image_path =

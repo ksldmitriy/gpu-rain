@@ -6,6 +6,7 @@ namespace gl {
 typedef unsigned int GLuint, GLenum;
 
 class Texture;
+class MsTexture;
 
 class Framebuffer {
 public:
@@ -18,8 +19,10 @@ public:
 
   void Create();
   void AttachTexture(Texture &texture, GLenum target);
+  void AttachMsTexture(MsTexture &texture, GLenum target);
   void Delete();
 
+  GLuint GetHande();
   void Bind() const;
 
 private:

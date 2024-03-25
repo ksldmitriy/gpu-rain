@@ -31,7 +31,8 @@ void Application::Init() {
 
   m_window.GetMonitorDimensions();
 
-  CreateFramebuffer();
+  CreateMsFramebuffer();
+  CreatePostFramebuffer();
 
   ProgramsLibrary::CreatePrograms();
 
@@ -43,7 +44,7 @@ void Application::Init() {
                                           s_framebuffer_size,
                                           m_window.GetSize(), m_render_area);
 
-  m_image_renderer.Create(s_test_media_path);
+  m_bg_image_renderer.Create(s_test_media_path);
 
   m_rain_simulation.Create(s_drops_count, s_framebuffer_size, s_drop_size,
                            s_splash_size);
@@ -66,35 +67,39 @@ void Application::MainLoop() {
 }
 
 void Application::DrawToFrambuffer() {
-  m_framebuffer.Bind();
+  m_ms_framebuffer.Bind();
+  glEnable(GL_MULTISAMPLE);
   SetViewport(s_framebuffer_size);
 
   glClearColor(1.0f, 0.0f, 0.0f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glDisable(GL_DEPTH_TEST);
-  m_image_renderer.Draw();
+  m_bg_image_renderer.Draw();
 
-  // glEnable(GL_DEPTH_TEST);
-  //  glDepthFunc(GL_LESS);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   m_rain_simulation.Draw();
 }
 
 void Application::DrawToScreen() {
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_ms_framebuffer.GetHande());
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_post_framebuffer.GetHande());
+
+  glBlitFramebuffer(0, 0, s_framebuffer_size.x, s_framebuffer_size.y, 0, 0,
+                    s_framebuffer_size.x, s_framebuffer_size.y,
+                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   SetViewport(m_window.GetSize());
 
   glClearColor(0.0f, 0.0f, 1.0f, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glDisable(GL_DEPTH_TEST);
 
   ProgramsLibrary::GetTextureProgram().Use();
   m_render_area.vao.Bind();
   m_render_area.ebo.Bind();
 
-  m_color_texture.Bind();
+  m_post_color_texture.Bind();
 
   glDrawElements(GL_TRIANGLES, m_render_area.index_count, GL_UNSIGNED_INT, 0);
 }
@@ -115,45 +120,44 @@ void Application::UpdateDeltaTime() {
   m_prev_frame_time = current_frame_time;
 }
 
-void Application::CreateFramebuffer() {
-  gl::TextureCreateInfo color_create_info;
-  color_create_info.format = GL_RGB;
-  color_create_info.internal_format = GL_RGB;
-  color_create_info.min_filter = GL_LINEAR;
-  color_create_info.mag_filter = GL_LINEAR;
-  color_create_info.wrap_s = GL_CLAMP_TO_EDGE;
-  color_create_info.wrap_t = GL_CLAMP_TO_EDGE;
-  color_create_info.type = GL_UNSIGNED_BYTE;
+void Application::CreateMsFramebuffer() {
+  gl::MsTextureCreateInfo texture_create_info;
+  texture_create_info.samples = 4;
+  texture_create_info.internal_format = GL_RGB;
+  texture_create_info.fixed_sample_locations = true;
 
-  m_color_texture.Create(s_framebuffer_size, color_create_info, nullptr);
+  m_ms_color_texture.Create(s_framebuffer_size, texture_create_info);
 
-  gl::TextureCreateInfo depth_create_info;
-  depth_create_info.format = GL_DEPTH_COMPONENT;
-  depth_create_info.internal_format = GL_DEPTH_COMPONENT32F;
-  depth_create_info.min_filter = GL_LINEAR;
-  depth_create_info.mag_filter = GL_LINEAR;
-  depth_create_info.wrap_s = GL_CLAMP_TO_EDGE;
-  depth_create_info.wrap_t = GL_CLAMP_TO_EDGE;
-  depth_create_info.type = GL_FLOAT;
+  m_ms_framebuffer.Create();
+  m_ms_framebuffer.AttachMsTexture(m_ms_color_texture, GL_COLOR_ATTACHMENT0);
 
-  m_depth_attachment.Create(s_framebuffer_size, depth_create_info, nullptr);
-
-  m_framebuffer.Create();
-  m_framebuffer.AttachTexture(m_color_texture, GL_COLOR_ATTACHMENT0);
-  m_framebuffer.AttachTexture(m_depth_attachment, GL_DEPTH_ATTACHMENT);
-
-  m_framebuffer.Bind();
+  m_ms_framebuffer.Bind();
 
   auto result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (result != GL_FRAMEBUFFER_COMPLETE) {
-    switch (result) {
-    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-      std::cout << "incompelete attach" << std::endl;
-      break;
-    case GL_FRAMEBUFFER_UNSUPPORTED:
-      std::cout << "unsup" << std::endl;
-      break;
-    }
+    throw std::runtime_error("cant complete ms framebuffer");
+  }
+}
+
+void Application::CreatePostFramebuffer() {
+  gl::TextureCreateInfo texture_create_info;
+  texture_create_info.format = GL_RGB;
+  texture_create_info.internal_format = GL_RGB;
+  texture_create_info.mag_filter = GL_LINEAR;
+  texture_create_info.min_filter = GL_LINEAR;
+  texture_create_info.wrap_s = GL_CLAMP_TO_EDGE;
+  texture_create_info.wrap_t = GL_CLAMP_TO_EDGE;
+  texture_create_info.type = GL_UNSIGNED_BYTE;
+
+  m_post_color_texture.Create(s_framebuffer_size, texture_create_info);
+  m_post_framebuffer.Create();
+  m_post_framebuffer.AttachTexture(m_post_color_texture, GL_COLOR_ATTACHMENT0);
+
+  m_post_framebuffer.Bind();
+
+  auto result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if (result != GL_FRAMEBUFFER_COMPLETE) {
+    throw std::runtime_error("cant complete post framebuffer");
   }
 }
 

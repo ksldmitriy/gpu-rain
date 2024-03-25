@@ -112,6 +112,9 @@ private:
   static const float s_droplet_speed;
   static const float s_splash_time;
 
-  static const char* s_main_depth_image_path;
-  static const char* s_top_down_depth_image_path;
+  static const float s_fall_drop_alpha_coefficient;
+  static const float s_splash_alpha_coefficient;
+
+  static const char *s_main_depth_image_path;
+  static const char *s_top_down_depth_image_path;
 };

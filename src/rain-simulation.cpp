@@ -101,6 +101,10 @@ void RainSimulation::Draw() {
   program.SetUniformFloat("u_far_plane", m_spawn_nl.z - m_spawn_fl.z);
   program.SetUniformFloat("u_min_drop_size", s_min_drop_size);
   program.SetUniformFloat("u_max_drop_size", s_max_drop_size);
+  program.SetUniformFloat("u_fall_drop_alpha_coefficient",
+                          s_fall_drop_alpha_coefficient);
+  program.SetUniformFloat("u_splash_alpha_coefficient",
+                          s_splash_alpha_coefficient);
 
   program.Use();
 
@@ -346,7 +350,7 @@ const std::array<RainSimulation::DropletVertex, 4> RainSimulation::s_droplet_ver
 	  glm::fvec2(1, 0)
 	},
 	{
-	  glm::fvec2(1, 1),
+	  glm::fvec2(1, 2),
 	  glm::fvec2(1, 2),
 	  glm::fvec2(1, 1),
 	},
