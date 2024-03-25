@@ -1,9 +1,7 @@
 #pragma once
 #include "gl/framebuffer.hpp"
-#include "gl/program.hpp"
+#include "gl/ms-texture.hpp"
 #include "gl/texture.hpp"
-#include "gl/vao.hpp"
-#include "gl/vbo.hpp"
 #include "image-renderer.hpp"
 #include "rain-simulation.hpp"
 #include "render-area-layout.hpp"
@@ -35,20 +33,23 @@ private:
 
   void UpdateDeltaTime();
 
-  void CreateFramebuffer();
+  void CreateMsFramebuffer();
+  void CreatePostFramebuffer();
 
   void SetViewport(glm::uvec2 size);
 
 private:
   XRootWindow m_window;
 
-  gl::Framebuffer m_framebuffer;
-  gl::Texture m_color_texture;
-  gl::Texture m_depth_attachment;
+  gl::Framebuffer m_ms_framebuffer;
+  gl::MsTexture m_ms_color_texture;
+
+  gl::Framebuffer m_post_framebuffer;
+  gl::Texture m_post_color_texture;
 
   gl::Texture m_image_texture;
 
-  ImageRenderer m_image_renderer;
+  ImageRenderer m_bg_image_renderer;
   RenderAreaLayout m_render_area;
 
   RainSimulation m_rain_simulation;
@@ -57,7 +58,7 @@ private:
   float m_delta_time;
 
   static const size_t s_drops_count;
-  
+
   static const glm::fvec2 s_drop_size;
   static const glm::fvec2 s_splash_size;
 
