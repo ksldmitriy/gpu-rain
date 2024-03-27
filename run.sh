@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
 trap terminate SIGINT
 terminate(){
-    pkill lofi-rain
+    pkill gpu-rain
     exit
 }
 
 echo === RUN ===
 
-./bin/lofi-rain
+./bin/gpu-rain

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13.4)
 
-project(lofi-rain)
+project(gpu-rain)
 
 # set
 set(CMAKE_CXX_STANDARD 20)
@@ -30,7 +30,7 @@ set_property(SOURCE ${ASM_SOURCE} APPEND PROPERTY COMPILE_OPTIONS "-I${CMAKE_SOU
 
 file(GLOB_RECURSE MY_PROJECT_SRC src/*.cpp)
 
-add_executable(lofi-rain ${MY_PROJECT_SRC} ${ASM_SOURCE})
+add_executable(gpu-rain ${MY_PROJECT_SRC} ${ASM_SOURCE})
 
-target_link_libraries(lofi-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm OpenEXR::OpenEXR)
-target_include_directories(lofi-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources" "${CMAKE_SOURCE_DIR}/libs/stb/include")
+target_link_libraries(gpu-rain PUBLIC ${X11_LIBRARIES} X11::Xrandr glad glm::glm OpenEXR::OpenEXR)
+target_include_directories(gpu-rain PUBLIC "${CMAKE_SOURCE_DIR}/resources" "${CMAKE_SOURCE_DIR}/libs/stb/include")
