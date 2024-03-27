@@ -6,7 +6,6 @@
 #include "glad/gl.h"
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 #include <random>
 #include <stb/stb_image.h>
 #include <vector>

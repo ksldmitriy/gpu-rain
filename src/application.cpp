@@ -1,12 +1,9 @@
 #include "application.hpp"
 
-#include "gl/shader.hpp"
 #include "programs-library.hpp"
 #include "render-area-layout-constructor.hpp"
-#include "shader-resources.hpp"
 
 #include <glad/gl.h>
-#include <iostream>
 #include <stb/stb_image.h>
 
 #include <ratio>

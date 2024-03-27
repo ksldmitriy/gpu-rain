@@ -31,7 +31,7 @@ const float RainSimulation::s_max_drop_size = 1.f;
 const float RainSimulation::s_droplet_speed = 18.f;
 const float RainSimulation::s_splash_time = 0.12f;
 
-const float RainSimulation::s_fall_drop_alpha_coefficient = 0.7f;
+const float RainSimulation::s_fall_drop_alpha_coefficient = 0.45f;
 const float RainSimulation::s_splash_alpha_coefficient = 0.9f;
 
 const char *RainSimulation::s_main_depth_image_path = "media/main-depth.exr";
